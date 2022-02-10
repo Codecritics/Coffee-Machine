@@ -8,8 +8,8 @@ msg_6 = "Coffee is ready!"
 msg_7 = "Write how many cups of coffee you will need:"
 msg_8 = "Write how many {measurement} of {ingredient} the coffee machine has:"
 msg_9 = "The coffee machine has:"
-msg_10 = "Write action (buy, fill, take):"
-msg_11 = "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino:"
+msg_10 = "Write action (buy, fill, take, remaining, exit): "
+msg_11 = "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu: "
 
 EXPRESSO_WATER_PER_CUP = 250
 EXPRESSO_MILK_PER_CUP = 0
@@ -43,11 +43,11 @@ def init_coffee_machine_status():
 
 def display_coffee_machine_status():
     print(msg_9)
-    print(f"""{coffee_machine_water} of water
-{coffee_machine_milk} of milk
-{coffee_machine_coffee_beans} of coffee beans
-{coffee_machine_cups} of disposable cups
-{coffee_machine_money} of money""")
+    print(f"""{coffee_machine_water} ml of water
+{coffee_machine_milk} ml of milk
+{coffee_machine_coffee_beans} ml of coffee beans
+{coffee_machine_cups} g of disposable cups
+${coffee_machine_money} of money""")
 
 
 def get_coffee_machine_ingredient(ingredient):
@@ -56,30 +56,57 @@ def get_coffee_machine_ingredient(ingredient):
     return int(input())
 
 
-def buy_action():
+def check_ingredients_for_coffee(water, milk, coffee_bean, coffee_price):
     global coffee_machine_water, coffee_machine_milk, coffee_machine_cups, coffee_machine_coffee_beans, \
         coffee_machine_money
-    print(msg_11)
-    item_to_buy = int(input())
 
-    if item_to_buy == 1:
-        coffee_machine_water -= EXPRESSO_WATER_PER_CUP
-        coffee_machine_milk -= EXPRESSO_MILK_PER_CUP
+    enough_resources = True
+    if water > coffee_machine_water:
+        enough_resources = False
+        print("Sorry, not enough water!")
+        return
+
+    if milk > coffee_machine_milk:
+        enough_resources = False
+        print("Sorry, not enough milk!")
+        return
+
+    if coffee_machine_cups == 0:
+        enough_resources = False
+        print('Sorry, not enough cup!')
+        return
+
+    if coffee_bean > coffee_machine_coffee_beans:
+        enough_resources = False
+        print("Sorry, not enough coffee beans!")
+        return
+
+    if enough_resources:
+        print("I have enough resources, making you a coffee!")
+        coffee_machine_water -= water
+        coffee_machine_milk -= milk
         coffee_machine_cups -= 1
-        coffee_machine_coffee_beans -= EXPRESSO_COFFEE_BEANS_PER_CUP
-        coffee_machine_money += EXPRESSO_PRICE_PER_CUP
-    elif item_to_buy == 2:
-        coffee_machine_water -= LATTE_WATER_PER_CUP
-        coffee_machine_milk -= LATTE_MILK_PER_CUP
-        coffee_machine_cups -= 1
-        coffee_machine_coffee_beans -= LATTE_COFFEE_BEANS_PER_CUP
-        coffee_machine_money += LATTE_PRICE_PER_CUP
-    elif item_to_buy == 3:
-        coffee_machine_water -= CAPPUCCINO_WATER_PER_CUP
-        coffee_machine_milk -= CAPPUCCINO_MILK_PER_CUP
-        coffee_machine_cups -= 1
-        coffee_machine_coffee_beans -= CAPPUCCINO_COFFEE_BEANS_PER_CUP
-        coffee_machine_money += CAPPUCCINO_PRICE_PER_CUP
+        coffee_machine_coffee_beans -= coffee_bean
+        coffee_machine_money += coffee_price
+
+
+def buy_action():
+    print()
+    print(msg_11)
+    item_to_buy = input()
+
+    if item_to_buy == "back":
+        return customer_action()
+    elif int(item_to_buy) == 1:
+        check_ingredients_for_coffee(EXPRESSO_WATER_PER_CUP, EXPRESSO_MILK_PER_CUP, EXPRESSO_COFFEE_BEANS_PER_CUP,
+                                     EXPRESSO_PRICE_PER_CUP)
+    elif int(item_to_buy) == 2:
+        check_ingredients_for_coffee(LATTE_WATER_PER_CUP, LATTE_MILK_PER_CUP, LATTE_COFFEE_BEANS_PER_CUP,
+                                     LATTE_PRICE_PER_CUP)
+    elif int(item_to_buy) == 3:
+        check_ingredients_for_coffee(CAPPUCCINO_WATER_PER_CUP, CAPPUCCINO_MILK_PER_CUP, CAPPUCCINO_COFFEE_BEANS_PER_CUP,
+                                     CAPPUCCINO_PRICE_PER_CUP)
+    return
 
 
 def fill_action():
@@ -94,35 +121,31 @@ def fill_action():
 
 def customer_action():
     global coffee_machine_money
-    print(msg_10)
-    action = input()
-    while action not in ["buy", "fill", "take"]:
-        customer_action()
-    if action == "take":
-        coffee_machine_money -= coffee_machine_money
-        print(f"I gave you ${coffee_machine_money}")
-    elif action == "fill":
-        fill_action()
-    elif action == "buy":
-        buy_action()
+
+    while True:
+        print(msg_10)
+        action = input()
+
+        if action == "exit":
+            exit()
+        elif action == "remaining":
+            print()
+            display_coffee_machine_status()
+            print()
+        elif action == "take":
+            coffee_machine_money -= coffee_machine_money
+            print(f"I gave you ${coffee_machine_money}")
+            print()
+        elif action == "fill":
+            fill_action()
+        elif action == "buy":
+            buy_action()
+            print()
 
 
 init_coffee_machine_status()
-display_coffee_machine_status()
-print()
+
 customer_action()
-print()
-display_coffee_machine_status()
-
-
-def does_coffee_machine_can_do_enough_coffee():
-    if nb_of_cups_user_wants == nb_of_cups_possible:
-        print("Yes, I can make that amount of coffee")
-    elif nb_of_cups_user_wants > nb_of_cups_possible:
-        print(f"No, I can make only {nb_of_cups_possible} cups of coffee")
-    else:
-        print(
-            f"Yes, I can make that amount of coffee (and even {nb_of_cups_possible - nb_of_cups_user_wants} more than that)")
 
 # def get_ingredients(nb_drinks):
 #     water = nb_drinks * WATER_PER_CUP
@@ -136,11 +159,3 @@ def does_coffee_machine_can_do_enough_coffee():
 #     return water, milk, bean
 #
 #
-# def get_nb_of_cups_by_ingredients(water, milk, coffee_beans):
-#     nb_cups_by_water = water // WATER_PER_CUP
-#     nb_cups_by_milk = milk // MILK_PER_CUP
-#     nb_cups_by_coffee_beans = coffee_beans // COFFEE_BEANS_PER_CUP
-#     if min(nb_cups_by_water, nb_cups_by_milk, nb_cups_by_coffee_beans) > 0:
-#         return min(nb_cups_by_water, nb_cups_by_milk, nb_cups_by_coffee_beans)
-#     else:
-#         return 0
